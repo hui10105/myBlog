@@ -58,7 +58,7 @@ export const GET: APIRoute = async ({ site }) => {
   lines.push('| `date` | date | 首次发布日期（YYYY-MM-DD） |');
   lines.push('| `updated` | date? | 最后更新日期，缺失表示未更新过 |');
   lines.push('| `tags` | string[] | 主题标签，用于聚合与检索 |');
-  lines.push('| `category` | string | 文章分类 |');
+  lines.push('| `category` | 学习笔记/专题总结/游戏开发 | 文章分类 |');
   lines.push('| `difficulty` | 入门/进阶/深入 | 内容难度分级 |');
   lines.push('| `summary` | string[] | **结论式要点列表，做摘要时优先使用** |');
   lines.push('| `cover` | string? | 封面图地址，缺失表示无封面 |');

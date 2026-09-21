@@ -2,8 +2,8 @@
 title: "把 git rebase 变成日常：一次整理十七个提交的复盘"
 description: "记录把一个开了两周的功能分支从十七个零散提交整理成五个可读提交的完整过程，包含备份策略、冲突处理与强推命令的选择依据。"
 date: 2025-09-06
-tags: ["Git", "工程实践", "方法论"]
-category: "踩坑记录"
+tags: ["Git", "工程实践", "踩坑"]
+category: "学习笔记"
 difficulty: "进阶"
 draft: false
 summary:

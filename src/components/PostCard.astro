@@ -34,7 +34,12 @@ const difficultyTone: Record<string, string> = {
   }
 
   <div class="text-muted flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-    <span class="text-accent font-medium">{category}</span>
+    <a
+      class="text-accent hover:text-accent-hover relative z-10 font-medium transition-colors"
+      href={withBase(`/categories/${encodeURIComponent(category)}/`)}
+    >
+      {category}
+    </a>
     <span class="bg-line h-3 w-px" aria-hidden="true" />
     <span class={difficultyTone[difficulty] ?? ''}>{difficulty}</span>
     <span class="bg-line h-3 w-px" aria-hidden="true" />

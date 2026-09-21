@@ -2,8 +2,8 @@
 title: "HTTP 缓存笔记：Cache-Control 与协商缓存的取舍"
 description: "从一次线上白屏事故出发，梳理强缓存与协商缓存的区别、Cache-Control 的分场景配置，以及浏览器刷新行为背后的实际请求路径。"
 date: 2025-09-27
-tags: ["HTTP", "前端", "工程实践"]
-category: "踩坑记录"
+tags: ["HTTP", "前端", "踩坑"]
+category: "学习笔记"
 difficulty: "进阶"
 draft: false
 summary:

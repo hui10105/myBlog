@@ -3,7 +3,7 @@ title: "我的学习系统：让笔记既能被人读，也能被机器读"
 description: "介绍一套从随手记录到周复盘的学习流程，包含四层笔记结构、统一的结构化 frontmatter 约定，以及把 AI 当作整理助手而非结论来源的使用边界。"
 date: 2025-10-08
 tags: ["学习系统", "方法论", "知识管理"]
-category: "方法论"
+category: "专题总结"
 difficulty: "入门"
 draft: false
 summary:

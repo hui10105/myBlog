@@ -1,0 +1,65 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getPosts, getCategories } from '../../lib/posts';
+import { withBase } from '../../lib/site';
+import { CATEGORIES, categoryNote } from '../../lib/categories';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const grouped = new Map((await getCategories(posts)).map((item) => [item.tag, item.posts]));
+  // 按声明顺序生成页面，空分类也生成，避免以后写第一篇时链接 404
+  return CATEGORIES.map((item) => ({
+    params: { category: item.name },
+    props: {
+      category: item.name,
+      note: item.note,
+      posts: grouped.get(item.name) ?? [],
+    },
+  }));
+}
+
+const { category, note, posts } = Astro.props;
+---
+
+<BaseLayout title={`分类：${category}`} description={`分类「${category}」下的全部记录：${note}`}>
+  <div class="container-page pt-12 pb-8 sm:pt-16">
+    <p class="eyebrow">Category</p>
+    <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{category}</h1>
+    <p class="text-ink-soft mt-4 text-sm">
+      {note} · 共 {posts.length} 篇 · <a class="text-accent" href={withBase('/categories/')}>查看全部分类</a>
+    </p>
+  </div>
+
+  <div class="container-page pb-6">
+    {
+      posts.length > 0 ? (
+        <div class="grid gap-5 md:grid-cols-2">
+          {posts.map((post) => (
+            <PostCard post={post} />
+          ))}
+        </div>
+      ) : (
+        <div class="border-line bg-surface-2 text-muted rounded-2xl border border-dashed p-10 text-center text-sm">
+          这个分类还没有文章。在 <code class="font-mono text-xs">src/content/blog/</code> 下新建文章时，
+          把 frontmatter 的 <code class="font-mono text-xs">category</code> 写成「{category}」就会出现在这里。
+        </div>
+      )
+    }
+  </div>
+
+  <div class="container-page mt-6 pb-16">
+    <p class="eyebrow mb-3">其他分类</p>
+    <div class="flex flex-wrap gap-2">
+      {
+        CATEGORIES
+          .filter((item) => item.name !== category)
+          .map((item) => (
+            <a class="pill" href={withBase(`/categories/${encodeURIComponent(item.name)}/`)}>
+              {item.name}
+            </a>
+          ))
+      }
+    </div>
+  </div>
+</BaseLayout>

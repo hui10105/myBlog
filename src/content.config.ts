@@ -1,5 +1,6 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { CATEGORY_NAMES, DEFAULT_CATEGORY } from './lib/categories';
 
 /**
  * 博客文章集合。
@@ -24,8 +25,8 @@ const blog = defineCollection({
     updated: z.coerce.date().optional(),
     /** 标签，2-4 个为宜 */
     tags: z.array(z.string()).default([]),
-    /** 分类：学习笔记 / 踩坑记录 / 方法论 */
-    category: z.string().default('学习笔记'),
+    /** 分类：可选值来自 src/lib/categories.ts */
+    category: z.enum(CATEGORY_NAMES).default(DEFAULT_CATEGORY),
     /** 难度分级 */
     difficulty: z.enum(['入门', '进阶', '深入']).default('入门'),
     /** 是否为草稿：草稿只在开发环境可见 */

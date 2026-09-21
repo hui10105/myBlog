@@ -21,7 +21,7 @@
 每篇 Markdown 的 frontmatter 必须符合 `src/content.config.ts` 的 schema：
 
 - 必填：`title`、`description`、`date`
-- 常用：`tags`（2-4 个）、`category`（学习笔记 / 踩坑记录 / 方法论）、`difficulty`（入门 / 进阶 / 深入）
+- 常用：`tags`（2-4 个）、`category`（学习笔记 / 专题总结 / 游戏开发）、`difficulty`（入门 / 进阶 / 深入）
 - `draft: true` 的文章只在 `pnpm dev` 可见，不进线上构建
 - `summary`：3-5 条**结论式**要点。这是全站对 AI 友好的核心字段——智能体做总结时优先读它，而不是读全文。写「X 会导致 Y」，不要写「本文介绍了 X」；每条要能脱离上下文独立理解
 
@@ -41,6 +41,7 @@
 ## 常见任务
 
 - **新增文章**：`pnpm new "标题" --slug=english-slug --tags=A,B`，然后补全 `summary` 并把 `draft` 改为 `false`。
+- **新增分类**：只改 `src/lib/categories.ts` 的 `CATEGORIES` 加一项（名称 + 说明），schema 与分类页都会自动跟上；现有三个分类是学习笔记 / 专题总结 / 游戏开发。
 - **改站点信息**：只改 `site.config.mjs`。
 - **改主题/配色**：改 `src/styles/global.css` 的 CSS 变量；强调色还需要在 `ThemeToggle.astro` 增加色板按钮。
 - **改分享图**：改 `scripts/make-og.mjs` 文案后执行 `node scripts/make-og.mjs`（依赖 devDependency `sharp`）。

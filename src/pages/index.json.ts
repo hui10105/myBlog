@@ -29,7 +29,7 @@ export const GET: APIRoute = async ({ site }) => {
       date: 'string，发布日期 YYYY-MM-DD',
       updated: 'string | null，最后更新日期',
       tags: 'string[]，主题标签',
-      category: 'string，文章分类',
+      category: '学习笔记 | 专题总结 | 游戏开发',
       difficulty: '入门 | 进阶 | 深入',
       lang: 'string，内容语言',
       cover: 'string | null，封面图地址',

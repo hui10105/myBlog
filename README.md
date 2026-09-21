@@ -82,7 +82,7 @@ pnpm new "文章标题" --slug=english-slug --tags=标签1,标签2
 | `date` | ✅ | 发布日期，`2025-09-14` 或带引号的 ISO 字符串 |
 | `updated` | | 最后更新日期，有更新时填 |
 | `tags` | | 标签数组，2-4 个为宜，是标签页聚合的依据 |
-| `category` | | 分类，默认「学习笔记」 |
+| `category` | | 分类，三选一：学习笔记 / 专题总结 / 游戏开发 |
 | `difficulty` | | `入门` / `进阶` / `深入`，默认「入门」 |
 | `draft` | | 默认 `false`。`true` 时只在 `pnpm dev` 可见，线上构建会跳过 |
 | `summary` | | **结论式要点数组**，3-5 条，AI 做总结时优先读这个字段 |
@@ -161,6 +161,7 @@ AI 编程助手（Claude Code、Cursor、Codex 等）打开这个仓库时会自
 | --- | --- |
 | 站点标题、副标题、描述、作者、导航、社交链接 | `site.config.mjs` 的 `SITE` |
 | 默认外观与强调色 | `site.config.mjs` 的 `defaultMode` / `defaultAccent` |
+| 博客分类（名称与说明文案） | `src/lib/categories.ts` 的 `CATEGORIES`，加一项即可 |
 | 配色（亮色 / 暗色全套颜色变量） | `src/styles/global.css` 顶部的 `:root` 与 `.dark` |
 | 强调色候选 | `src/components/ThemeToggle.astro`（色板按钮 + `global.css` 里的 `[data-accent=...]`） |
 | 字体 | `src/styles/global.css` 的 `@theme inline` 中 `--font-sans` / `--font-mono` |

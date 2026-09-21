@@ -60,7 +60,7 @@ const jsonLd = {
     <!-- 文章头部 -->
     <header class="mx-auto max-w-3xl">
       <div class="text-muted flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
-        <a class="text-accent hover:text-accent-hover font-medium transition-colors" href={withBase('/blog/')}>
+        <a class="text-accent hover:text-accent-hover font-medium transition-colors" href={withBase(`/categories/${encodeURIComponent(category)}/`)}>
           {category}
         </a>
         <span class="bg-line h-3 w-px" aria-hidden="true"></span>
