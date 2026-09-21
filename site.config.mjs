@@ -8,7 +8,7 @@
  * 把 REPO_NAME 改成 `${GITHUB_USER}.github.io` 即可，其余不用动。
  */
 
-export const GITHUB_USER = 'YOUR_GITHUB_USERNAME';
+export const GITHUB_USER = 'hui10105';
 export const REPO_NAME = 'myBolg';
 
 /** 是否为「用户/组织站点」：仓库名为 <用户名>.github.io 时站点位于根路径 */
