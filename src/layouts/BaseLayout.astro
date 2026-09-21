@@ -1,0 +1,113 @@
+---
+import '../styles/global.css';
+import { SITE, withBase, absoluteUrl } from '../lib/site';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  /** 页面标题（不含站点名，会自动拼接） */
+  title?: string;
+  /** 页面描述 */
+  description?: string;
+  /** og:type */
+  type?: 'website' | 'article';
+  /** 文章发布时间（ISO 字符串） */
+  publishedTime?: string;
+  /** 文章标签，用于 og:article:tag */
+  tags?: string[];
+  /** 是否禁止搜索引擎索引（草稿预览用） */
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = SITE.description,
+  type = 'website',
+  publishedTime,
+  tags = [],
+  noindex = false,
+} = Astro.props;
+
+const pageTitle = title ? `${title} · ${SITE.title}` : `${SITE.title} · ${SITE.tagline}`;
+const canonical = absoluteUrl(Astro.url.pathname, Astro.site?.origin);
+const ogImage = new URL(withBase('/og-default.png'), Astro.site?.origin ?? 'https://example.com').href;
+const year = new Date().getFullYear();
+---
+
+<!doctype html>
+<html
+  lang={SITE.lang}
+  data-accent={SITE.defaultAccent}
+  data-default-mode={SITE.defaultMode}
+  class={SITE.defaultMode === 'dark' ? 'dark' : ''}
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <link rel="canonical" href={canonical} />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <meta name="author" content={SITE.author} />
+    <meta name="theme-color" content="#faf9f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1d26" media="(prefers-color-scheme: dark)" />
+
+    <!-- Open Graph / Twitter -->
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={SITE.title} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="zh_CN" />
+    {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+    {tags.map((tag) => <meta property="article:tag" content={tag} />)}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="alternate" type="application/rss+xml" title={`${SITE.title} RSS`} href={withBase('/rss.xml')} />
+    <!-- 给 AI 智能体看的站点说明与结构化索引 -->
+    <link rel="alternate" type="text/plain" title="llms.txt" href={withBase('/llms.txt')} />
+    <link rel="alternate" type="application/json" title="文章索引 JSON" href={withBase('/index.json')} />
+
+    <!-- 主题预设：在 CSS 之前执行，避免暗色模式闪白 -->
+    <script is:inline>
+      (function () {
+        try {
+          var root = document.documentElement;
+          var mode = localStorage.getItem('theme-mode') || root.dataset.defaultMode || 'auto';
+          var accent = localStorage.getItem('theme-accent') || root.dataset.accent || 'indigo';
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = mode === 'dark' || (mode === 'auto' && prefersDark);
+          root.classList.toggle('dark', isDark);
+          root.setAttribute('data-accent', accent);
+          root.setAttribute('data-mode', mode);
+        } catch (e) {
+          /* 隐私模式下 localStorage 不可用，忽略即可 */
+        }
+      })();
+    </script>
+  </head>
+
+  <body class="bg-canvas text-ink flex min-h-screen flex-col">
+    <a
+      href="#main"
+      class="bg-accent text-accent-on sr-only rounded-md px-4 py-2 focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
+    >
+      跳到正文
+    </a>
+
+    <Header />
+
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+
+    <Footer year={year} />
+  </body>
+</html>

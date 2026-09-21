@@ -1,0 +1,27 @@
+{
+  "name": "mybolg",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "个人学习博客：记录学习经历与经验，内容对 AI 智能体友好",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "new": "node scripts/new-post.mjs",
+    "og": "node scripts/make-og.mjs"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.11",
+    "@astrojs/sitemap": "^3.4.1",
+    "astro": "^5.13.5",
+    "rehype-autolink-headings": "^7.1.0",
+    "rehype-slug": "^6.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.13",
+    "sharp": "^0.35.4",
+    "tailwindcss": "^4.1.13"
+  }
+}

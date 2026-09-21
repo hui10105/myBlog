@@ -1,0 +1,66 @@
+---
+import { SITE, withBase } from '../lib/site';
+
+interface Props {
+  year: number;
+}
+const { year } = Astro.props;
+const links = SITE.social.filter((item) => item.href && item.href !== '#');
+---
+
+<footer class="border-line mt-20 border-t">
+  <div class="container-page grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="lg:col-span-2">
+      <p class="text-ink font-semibold">{SITE.title}</p>
+      <p class="text-muted mt-2 max-w-md text-sm leading-relaxed">{SITE.description}</p>
+    </div>
+
+    <div>
+      <p class="eyebrow mb-3">导航</p>
+      <ul class="space-y-2 text-sm">
+        {
+          SITE.nav.map((item) => (
+            <li>
+              <a class="text-ink-soft hover:text-accent transition-colors" href={withBase(item.href)}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div>
+      <p class="eyebrow mb-3">给智能体</p>
+      <ul class="space-y-2 text-sm">
+        <li>
+          <a class="text-ink-soft hover:text-accent font-mono text-[0.82rem] transition-colors" href={withBase('/llms.txt')}>
+            /llms.txt
+          </a>
+        </li>
+        <li>
+          <a class="text-ink-soft hover:text-accent font-mono text-[0.82rem] transition-colors" href={withBase('/index.json')}>
+            /index.json
+          </a>
+        </li>
+        <li>
+          <a class="text-ink-soft hover:text-accent font-mono text-[0.82rem] transition-colors" href={withBase('/rss.xml')}>
+            /rss.xml
+          </a>
+        </li>
+      </ul>
+      <p class="text-muted mt-3 text-xs leading-relaxed">
+        每篇文章都有结构化 frontmatter 与要点摘要，可直接被 AI 读取总结。
+      </p>
+    </div>
+  </div>
+
+  <div class="border-line border-t">
+    <div class="container-page text-muted flex flex-col gap-2 py-5 text-xs sm:flex-row sm:items-center sm:justify-between">
+      <p>© {year} {SITE.author} · 用 Astro 构建，托管于 GitHub Pages</p>
+      <p class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        {links.map((item) => <a class="hover:text-accent transition-colors" href={item.href.startsWith('/') ? withBase(item.href) : item.href} rel="noopener">{item.label}</a>)}
+      </p>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,263 @@
+---
+/**
+ * 站内搜索：零依赖的客户端搜索。
+ * 索引在构建时生成（/search-index.json），首次打开搜索框时才加载。
+ * 中文按子串匹配，英文按词匹配，标题和标签权重更高。
+ */
+---
+
+<div class="relative" data-search data-base={import.meta.env.BASE_URL}>
+  <button type="button" class="btn h-9 gap-2 !px-2.5 sm:!px-3" data-search-open aria-haspopup="dialog">
+    <svg class="h-[17px] w-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="6.5"></circle>
+      <path d="m16 16 4.5 4.5"></path>
+    </svg>
+    <span class="text-muted hidden text-sm sm:inline">搜索文章</span>
+    <kbd class="border-line bg-surface-2 text-muted hidden rounded border px-1.5 py-0.5 font-mono text-[0.68rem] lg:inline">⌘K</kbd>
+  </button>
+
+  <div class="fixed inset-0 z-50 hidden" data-search-modal>
+    <div class="bg-ink/45 absolute inset-0 backdrop-blur-sm" data-search-backdrop></div>
+
+    <div
+      class="border-line bg-surface animate-fade-up absolute top-[12vh] left-1/2 w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-2xl border shadow-2xl"
+      role="dialog"
+      aria-modal="true"
+      aria-label="搜索文章"
+    >
+      <div class="border-line flex items-center gap-3 border-b px-4">
+        <svg class="text-muted h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.5"></circle>
+          <path d="m16 16 4.5 4.5"></path>
+        </svg>
+        <input
+          type="search"
+          class="text-ink placeholder:text-muted h-14 w-full bg-transparent text-[0.95rem] outline-none"
+          placeholder="搜索标题、标签或正文关键词…"
+          data-search-input
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button type="button" class="btn h-7 !px-2 text-xs" data-search-close>Esc</button>
+      </div>
+
+      <div class="max-h-[26rem] overflow-y-auto p-2" data-search-results>
+        <p class="text-muted px-3 py-6 text-center text-sm" data-search-hint>输入关键词开始搜索</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    var box = document.querySelector('[data-search]');
+    if (!box) return;
+
+    var base = (box.dataset.base || '/').replace(/\/$/, '');
+    var modal = box.querySelector('[data-search-modal]');
+    var input = box.querySelector('[data-search-input]');
+    var results = box.querySelector('[data-search-results]');
+    var openBtn = box.querySelector('[data-search-open]');
+    var closeBtn = box.querySelector('[data-search-close]');
+    var backdrop = box.querySelector('[data-search-backdrop]');
+
+    var index = null;
+    var loading = null;
+    var active = -1;
+    var current = [];
+
+    function load() {
+      if (index) return Promise.resolve(index);
+      if (!loading) {
+        loading = fetch(base + '/search-index.json')
+          .then(function (res) { return res.json(); })
+          .then(function (data) { index = data; return data; })
+          .catch(function () { index = []; return index; });
+      }
+      return loading;
+    }
+
+    function terms(query) {
+      return query
+        .toLowerCase()
+        .split(/\s+/)
+        .map(function (t) { return t.trim(); })
+        .filter(Boolean);
+    }
+
+    /** 打分：命中越多字段分越高，并按词频加权 */
+    function score(post, list) {
+      var title = (post.title || '').toLowerCase();
+      var tags = (post.tags || []).join(' ').toLowerCase();
+      var desc = (post.description || '').toLowerCase();
+      var body = (post.text || '').toLowerCase();
+      var total = 0;
+      for (var i = 0; i < list.length; i++) {
+        var term = list[i];
+        var hit = 0;
+        if (title.indexOf(term) > -1) hit += 12;
+        if (tags.indexOf(term) > -1) hit += 7;
+        if (desc.indexOf(term) > -1) hit += 4;
+        var count = body.split(term).length - 1;
+        if (count > 0) hit += Math.min(count, 5);
+        if (!hit) return 0; // 所有关键词都必须命中
+        total += hit;
+      }
+      return total;
+    }
+
+    function makeSnippet(text, list) {
+      var lower = text.toLowerCase();
+      var at = -1;
+      for (var i = 0; i < list.length; i++) {
+        var found = lower.indexOf(list[i]);
+        if (found > -1 && (at === -1 || found < at)) at = found;
+      }
+      if (at === -1) return text.slice(0, 110);
+      var start = Math.max(0, at - 40);
+      return (start > 0 ? '…' : '') + text.slice(start, start + 120) + '…';
+    }
+
+    /** 把命中的关键词包进 <mark>，用 DOM 构建避免 XSS */
+    function highlight(text, list) {
+      var fragment = document.createDocumentFragment();
+      if (!list.length) {
+        fragment.appendChild(document.createTextNode(text));
+        return fragment;
+      }
+      var lower = text.toLowerCase();
+      var marks = [];
+      list.forEach(function (term) {
+        var from = 0;
+        while (from < lower.length) {
+          var at = lower.indexOf(term, from);
+          if (at === -1) break;
+          marks.push([at, at + term.length]);
+          from = at + term.length;
+        }
+      });
+      marks.sort(function (a, b) { return a[0] - b[0]; });
+      var cursor = 0;
+      marks.forEach(function (range) {
+        if (range[0] < cursor) return;
+        if (range[0] > cursor) fragment.appendChild(document.createTextNode(text.slice(cursor, range[0])));
+        var mark = document.createElement('mark');
+        mark.textContent = text.slice(range[0], range[1]);
+        fragment.appendChild(mark);
+        cursor = range[1];
+      });
+      if (cursor < text.length) fragment.appendChild(document.createTextNode(text.slice(cursor)));
+      return fragment;
+    }
+
+    function render(query) {
+      var list = terms(query);
+      results.textContent = '';
+
+      if (!list.length) {
+        var hint = document.createElement('p');
+        hint.className = 'text-muted px-3 py-6 text-center text-sm';
+        hint.textContent = '输入关键词开始搜索';
+        results.appendChild(hint);
+        current = [];
+        active = -1;
+        return;
+      }
+
+      current = index
+        .map(function (post) { return { post: post, s: score(post, list) }; })
+        .filter(function (item) { return item.s > 0; })
+        .sort(function (a, b) { return b.s - a.s; })
+        .slice(0, 12)
+        .map(function (item) { return item.post; });
+
+      if (!current.length) {
+        var empty = document.createElement('p');
+        empty.className = 'text-muted px-3 py-6 text-center text-sm';
+        empty.textContent = '没有找到匹配的文章，换个关键词试试';
+        results.appendChild(empty);
+        active = -1;
+        return;
+      }
+
+      active = 0;
+      current.forEach(function (post, i) {
+        var link = document.createElement('a');
+        link.href = base + post.url;
+        link.className =
+          'block rounded-xl px-3 py-2.5 transition-colors hover:bg-surface-2' + (i === 0 ? ' bg-surface-2' : '');
+        link.dataset.resultIndex = String(i);
+
+        var head = document.createElement('div');
+        head.className = 'flex items-center justify-between gap-3';
+        var title = document.createElement('p');
+        title.className = 'text-ink truncate text-sm font-medium';
+        title.appendChild(highlight(post.title, list));
+        var meta = document.createElement('span');
+        meta.className = 'text-muted shrink-0 font-mono text-[0.7rem]';
+        meta.textContent = post.date;
+        head.appendChild(title);
+        head.appendChild(meta);
+
+        var desc = document.createElement('p');
+        desc.className = 'text-muted mt-1 line-clamp-2 text-xs leading-relaxed';
+        desc.appendChild(highlight(makeSnippet(post.text || post.description || '', list), list));
+
+        link.appendChild(head);
+        link.appendChild(desc);
+        results.appendChild(link);
+      });
+    }
+
+    function move(delta) {
+      var items = results.querySelectorAll('[data-result-index]');
+      if (!items.length) return;
+      active = (active + delta + items.length) % items.length;
+      items.forEach(function (item, i) {
+        item.classList.toggle('bg-surface-2', i === active);
+      });
+      items[active].scrollIntoView({ block: 'nearest' });
+    }
+
+    function open() {
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      input.value = '';
+      input.focus();
+      load().then(function () {
+        render(input.value);
+      });
+    }
+
+    function close() {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      if (openBtn) openBtn.focus();
+    }
+
+    openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    backdrop.addEventListener('click', close);
+
+    input.addEventListener('input', function () {
+      render(input.value);
+    });
+
+    document.addEventListener('keydown', function (event) {
+      var isOpen = !modal.classList.contains('hidden');
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        isOpen ? close() : open();
+        return;
+      }
+      if (!isOpen) return;
+      if (event.key === 'Escape') close();
+      if (event.key === 'ArrowDown') { event.preventDefault(); move(1); }
+      if (event.key === 'ArrowUp') { event.preventDefault(); move(-1); }
+      if (event.key === 'Enter') {
+        var item = results.querySelector('[data-result-index="' + active + '"]');
+        if (item) { event.preventDefault(); window.location.href = item.href; }
+      }
+    });
+  })();
+</script>

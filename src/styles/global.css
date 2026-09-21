@@ -1,0 +1,580 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   1. 主题切换机制
+   - .dark 类挂在 <html> 上，代表暗色外观
+   - data-accent 属性挂在 <html> 上，代表强调色
+   - 首屏由 BaseLayout 里的内联脚本提前写入，避免亮暗闪烁（FOUC）
+   ========================================================================== */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------- 亮色主题（默认） ---------------------------- */
+:root {
+  color-scheme: light;
+
+  --canvas: oklch(97.9% 0.005 95);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(96.4% 0.006 95);
+  --surface-3: oklch(93.5% 0.008 95);
+  --ink: oklch(24% 0.021 265);
+  --ink-soft: oklch(42% 0.021 265);
+  --muted: oklch(55% 0.018 265);
+  --line: oklch(89.5% 0.007 265);
+  --line-strong: oklch(80% 0.01 265);
+  --shadow-color: 265 25% 35%;
+
+  /* 强调色：indigo */
+  --accent: oklch(54% 0.2 275);
+  --accent-hover: oklch(47% 0.2 275);
+  --accent-on: oklch(99% 0.005 275);
+  --accent-soft: oklch(94.5% 0.035 275);
+  --accent-ring: oklch(54% 0.2 275 / 0.35);
+}
+
+/* ---------------------------- 暗色主题 ---------------------------- */
+.dark {
+  color-scheme: dark;
+
+  --canvas: oklch(18.5% 0.017 265);
+  --surface: oklch(22.5% 0.02 265);
+  --surface-2: oklch(26% 0.022 265);
+  --surface-3: oklch(30% 0.024 265);
+  --ink: oklch(94% 0.01 262);
+  --ink-soft: oklch(83% 0.014 262);
+  --muted: oklch(68% 0.018 262);
+  --line: oklch(31% 0.02 265);
+  --line-strong: oklch(40% 0.022 265);
+  --shadow-color: 265 40% 4%;
+
+  --accent: oklch(75% 0.15 275);
+  --accent-hover: oklch(82% 0.13 275);
+  --accent-on: oklch(20% 0.04 275);
+  --accent-soft: oklch(30% 0.055 275);
+  --accent-ring: oklch(75% 0.15 275 / 0.4);
+}
+
+/* ---------------------------- 可切换的强调色 ---------------------------- */
+[data-accent='emerald'] {
+  --accent: oklch(56% 0.13 168);
+  --accent-hover: oklch(49% 0.13 168);
+  --accent-on: oklch(99% 0.005 168);
+  --accent-soft: oklch(94.5% 0.04 168);
+  --accent-ring: oklch(56% 0.13 168 / 0.35);
+}
+.dark[data-accent='emerald'] {
+  --accent: oklch(78% 0.14 168);
+  --accent-hover: oklch(85% 0.12 168);
+  --accent-on: oklch(20% 0.04 168);
+  --accent-soft: oklch(30% 0.06 168);
+  --accent-ring: oklch(78% 0.14 168 / 0.4);
+}
+
+[data-accent='amber'] {
+  --accent: oklch(60% 0.13 62);
+  --accent-hover: oklch(53% 0.13 62);
+  --accent-on: oklch(99% 0.005 62);
+  --accent-soft: oklch(95% 0.045 75);
+  --accent-ring: oklch(60% 0.13 62 / 0.35);
+}
+.dark[data-accent='amber'] {
+  --accent: oklch(82% 0.14 78);
+  --accent-hover: oklch(88% 0.12 78);
+  --accent-on: oklch(22% 0.04 78);
+  --accent-soft: oklch(31% 0.055 78);
+  --accent-ring: oklch(82% 0.14 78 / 0.4);
+}
+
+[data-accent='rose'] {
+  --accent: oklch(57% 0.19 12);
+  --accent-hover: oklch(50% 0.19 12);
+  --accent-on: oklch(99% 0.005 12);
+  --accent-soft: oklch(95% 0.035 12);
+  --accent-ring: oklch(57% 0.19 12 / 0.35);
+}
+.dark[data-accent='rose'] {
+  --accent: oklch(76% 0.15 12);
+  --accent-hover: oklch(83% 0.13 12);
+  --accent-on: oklch(20% 0.05 12);
+  --accent-soft: oklch(30% 0.07 12);
+  --accent-ring: oklch(76% 0.15 12 / 0.4);
+}
+
+/* ==========================================================================
+   2. 映射到 Tailwind 主题变量
+   这样就能用 bg-surface / text-ink / border-line / text-accent 等工具类
+   ========================================================================== */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-on: var(--accent-on);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Noto Sans SC', 'Source Han Sans SC', sans-serif;
+  --font-mono:
+    'SF Mono', 'JetBrains Mono', Menlo, Consolas, 'PingFang SC', 'Microsoft YaHei',
+    'Noto Sans Mono CJK SC', monospace;
+
+  --radius-card: 1rem;
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==========================================================================
+   3. 基础样式
+   ========================================================================== */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-color: var(--line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-on);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* 锚点跳转时给标题留出吸顶导航的空间 */
+  :target {
+    scroll-margin-top: 6rem;
+  }
+
+  /* 细滚动条 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--line-strong);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted);
+  }
+}
+
+/* ==========================================================================
+   4. 组件级样式（用 @layer components 保证可被工具类覆盖）
+   ========================================================================== */
+@layer components {
+  .container-page {
+    width: 100%;
+    max-width: 72rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* 卡片：hover 有轻微上浮和描边高亮 */
+  .card {
+    position: relative;
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    transition:
+      transform 0.35s var(--ease-out-soft),
+      border-color 0.25s ease,
+      box-shadow 0.35s var(--ease-out-soft);
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--line-strong);
+    box-shadow: 0 18px 40px -24px hsl(var(--shadow-color) / 0.45);
+  }
+
+  /* 标签胶囊 */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background-color: var(--surface-2);
+    color: var(--ink-soft);
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease;
+  }
+  a.pill:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background-color: var(--accent-soft);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1.05rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 0.7rem;
+    border: 1px solid var(--line);
+    background-color: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s var(--ease-out-soft);
+  }
+  .btn:hover {
+    border-color: var(--line-strong);
+    background-color: var(--surface-2);
+    transform: translateY(-1px);
+  }
+  .btn-primary {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-on);
+  }
+  .btn-primary:hover {
+    background-color: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  /* 分区小标题 */
+  .eyebrow {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* 首页/页头的大标题渐变 */
+  .gradient-title {
+    background-image: linear-gradient(
+      100deg,
+      var(--ink) 0%,
+      var(--ink) 45%,
+      var(--accent) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* 装饰性背景光斑 */
+  .aurora {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .aurora::before,
+  .aurora::after {
+    content: '';
+    position: absolute;
+    width: 34rem;
+    height: 34rem;
+    border-radius: 999px;
+    filter: blur(80px);
+    opacity: 0.5;
+  }
+  .aurora::before {
+    top: -14rem;
+    left: -10rem;
+    background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+  }
+  .aurora::after {
+    top: -6rem;
+    right: -12rem;
+    background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+    opacity: 0.9;
+  }
+  .dark .aurora::before {
+    opacity: 0.32;
+  }
+  .dark .aurora::after {
+    opacity: 0.5;
+  }
+}
+
+/* ==========================================================================
+   5. 文章正文排版（自研 prose，不依赖 typography 插件）
+   ========================================================================== */
+.article {
+  color: var(--ink-soft);
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  overflow-wrap: break-word;
+}
+
+.article > * + * {
+  margin-top: 1.15em;
+}
+
+.article h2,
+.article h3,
+.article h4 {
+  color: var(--ink);
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  scroll-margin-top: 6rem;
+}
+.article h2 {
+  margin-top: 2.6em;
+  margin-bottom: 0.85em;
+  padding-bottom: 0.4em;
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.article h3 {
+  margin-top: 2em;
+  font-size: 1.2rem;
+}
+.article h4 {
+  margin-top: 1.6em;
+  font-size: 1.05rem;
+}
+
+.article a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-ring);
+  padding-bottom: 1px;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.article a:hover {
+  color: var(--accent-hover);
+  border-bottom-color: var(--accent-hover);
+}
+
+.article strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+.article em {
+  font-style: italic;
+}
+
+.article ul,
+.article ol {
+  padding-left: 1.35em;
+}
+.article ul {
+  list-style: disc;
+}
+.article ol {
+  list-style: decimal;
+}
+.article li {
+  margin-top: 0.4em;
+}
+.article li::marker {
+  color: var(--accent);
+}
+.article li > ul,
+.article li > ol {
+  margin-top: 0.4em;
+}
+
+.article blockquote {
+  padding: 0.2em 0 0.2em 1.1em;
+  border-left: 3px solid var(--accent);
+  color: var(--muted);
+  font-style: normal;
+}
+.article blockquote p {
+  margin: 0;
+}
+
+/* 行内代码 */
+.article :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.15em 0.4em;
+  border-radius: 0.4rem;
+  background-color: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--accent);
+}
+
+/* 代码块 */
+.article pre {
+  background-color: var(--surface-2) !important;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  padding: 1.05rem 1.15rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+.article pre code {
+  font-family: var(--font-mono);
+  background: transparent !important;
+  border: 0;
+  padding: 0;
+  color: inherit;
+}
+.article pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+/* Shiki 双主题：暗色下切换到 dark 变量 */
+html.dark .astro-code,
+html.dark .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
+/* 表格 */
+.article table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+  display: block;
+  overflow-x: auto;
+}
+.article th,
+.article td {
+  padding: 0.6em 0.85em;
+  border: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.article thead th {
+  background-color: var(--surface-2);
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.article tbody tr:nth-child(even) {
+  background-color: color-mix(in oklab, var(--surface-2) 55%, transparent);
+}
+
+.article img {
+  border-radius: 0.85rem;
+  border: 1px solid var(--line);
+  max-width: 100%;
+  height: auto;
+}
+
+.article hr {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+  margin-block: 2.5em;
+}
+
+/* 标题锚点 */
+.article .heading-anchor {
+  margin-left: 0.4em;
+  color: var(--line-strong);
+  border: 0;
+  font-weight: 400;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+.article h2:hover .heading-anchor,
+.article h3:hover .heading-anchor,
+.article h4:hover .heading-anchor {
+  opacity: 1;
+}
+.article .heading-anchor:hover {
+  color: var(--accent);
+  border: 0;
+}
+
+/* ==========================================================================
+   6. 动画
+   ========================================================================== */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s var(--ease-out-soft) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.35s ease both;
+}
+
+/* 搜索结果高亮 */
+mark {
+  background-color: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 3px;
+  padding: 0 0.15em;
+}

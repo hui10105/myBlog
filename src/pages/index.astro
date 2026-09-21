@@ -1,0 +1,180 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import { getPosts, getTags, postReadingTime } from '../lib/posts';
+import { SITE, formatDateCN, toISODate, withBase } from '../lib/site';
+
+const posts = await getPosts();
+const tags = (await getTags(posts)).slice(0, 14);
+const [latest, ...rest] = posts;
+const recent = rest.slice(0, 6);
+
+// 首页统计数据
+const totalMinutes = posts.reduce((sum, post) => sum + postReadingTime(post), 0);
+const totalChars = posts.reduce((sum, post) => sum + (post.body?.length ?? 0), 0);
+const lastUpdated = posts[0]?.data.date;
+
+const stats = [
+  { value: String(posts.length), label: '篇文章' },
+  { value: String(tags.length), label: '个主题' },
+  { value: `${(totalChars / 10000).toFixed(1)} 万`, label: '累计字数' },
+  { value: `${Math.round(totalMinutes / 60)} 小时`, label: '阅读时长' },
+];
+
+// 给智能体的示例命令（构建时用真实地址替换）
+const base = import.meta.env.BASE_URL;
+const llmsUrl = new URL(`${base}llms.txt`, Astro.site ?? 'https://example.com').href;
+const indexUrl = new URL(`${base}index.json`, Astro.site ?? 'https://example.com').href;
+const agentSnippets = [
+  { label: '站点说明', command: `curl -sL ${llmsUrl}` },
+  { label: '全部文章索引', command: `curl -sL ${indexUrl} | jq '.posts[0]'` },
+  { label: '原始 Markdown', command: `curl -sL ${new URL(`${base}md/astro-content-collections.md`, Astro.site ?? 'https://example.com').href}` },
+];
+---
+
+<BaseLayout description={SITE.description}>
+  <!-- 首屏 -->
+  <section class="relative overflow-hidden">
+    <div class="aurora" aria-hidden="true"></div>
+    <div class="container-page pt-16 pb-12 sm:pt-24 sm:pb-16">
+      <p class="eyebrow animate-fade-up">个人学习博客</p>
+      <h1
+        class="gradient-title animate-fade-up mt-4 max-w-3xl text-3xl leading-[1.25] font-bold tracking-tight sm:text-[2.6rem]"
+      >
+        {SITE.tagline}
+      </h1>
+      <p class="text-ink-soft animate-fade-up mt-5 max-w-2xl text-[1.02rem] leading-relaxed">
+        这里记录我在编程路上的学习经历、踩过的坑和复盘出来的方法。每篇文章都带结构化摘要与标签，
+        既方便未来的自己复习，也方便 AI 智能体直接读取、归纳和总结。
+      </p>
+
+      <div class="animate-fade-up mt-8 flex flex-wrap items-center gap-3">
+        <a class="btn btn-primary" href={withBase('/blog/')}>
+          浏览全部文章
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h13M13 6l6 6-6 6"></path>
+          </svg>
+        </a>
+        <a class="btn" href={withBase('/about/')}>关于这个博客</a>
+        <a class="btn" href={withBase('/llms.txt')}>
+          <span class="font-mono text-xs">llms.txt</span>
+          <span class="text-muted text-xs">给智能体</span>
+        </a>
+      </div>
+
+      <dl class="border-line mt-12 grid max-w-2xl grid-cols-2 gap-y-6 border-t pt-8 sm:grid-cols-4">
+        {
+          stats.map((stat) => (
+            <div>
+              <dt class="text-muted text-xs">{stat.label}</dt>
+              <dd class="text-ink mt-1 font-mono text-xl font-semibold tracking-tight">{stat.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <!-- 最新文章 -->
+  <section class="container-page mt-8">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <h2 class="text-xl font-semibold tracking-tight sm:text-2xl">最新文章</h2>
+        <p class="text-muted mt-1.5 text-sm">
+          {lastUpdated ? `最近一次更新于 ${formatDateCN(lastUpdated)}` : '还没有文章'}
+        </p>
+      </div>
+      <a class="text-accent hover:text-accent-hover shrink-0 text-sm transition-colors" href={withBase('/blog/')}>
+        全部 {posts.length} 篇 →
+      </a>
+    </div>
+
+    {
+      latest ? (
+        <div class="mt-6 space-y-5">
+          <PostCard post={latest} featured />
+          {recent.length > 0 && (
+            <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {recent.map((post) => (
+                <PostCard post={post} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <p class="text-muted mt-6 text-sm">
+          还没有文章。在 <code class="font-mono">src/content/blog/</code> 下新建一个 .md 文件就能开始写作。
+        </p>
+      )
+    }
+  </section>
+
+  <!-- 主题 -->
+  {
+    tags.length > 0 && (
+      <section class="container-page mt-16">
+        <div class="flex items-end justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-semibold tracking-tight sm:text-2xl">按主题浏览</h2>
+            <p class="text-muted mt-1.5 text-sm">标签来自每篇文章的 frontmatter，交给智能体时也是最省 token 的入口</p>
+          </div>
+          <a class="text-accent hover:text-accent-hover shrink-0 text-sm transition-colors" href={withBase('/tags/')}>
+            全部标签 →
+          </a>
+        </div>
+        <div class="mt-5 flex flex-wrap gap-2">
+          {tags.map((item) => (
+            <a class="pill !text-sm" href={withBase(`/tags/${encodeURIComponent(item.tag)}/`)}>
+              {item.tag}
+              <span class="text-muted font-mono text-[0.7rem]">{item.count}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 给 AI 智能体的入口 -->
+  <section class="container-page mt-16">
+    <div class="card p-6 sm:p-8">
+      <p class="eyebrow">机器可读</p>
+      <h2 class="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">让 AI 智能体帮你总结这个博客</h2>
+      <p class="text-ink-soft mt-3 max-w-2xl text-sm leading-relaxed">
+        站点在构建时额外生成了三个面向机器的出口：一份说明文件、一份包含全部文章元数据与要点的 JSON 索引、
+        以及每篇文章的原始 Markdown。把任意一个地址丢给智能体，它就能读懂整站内容并做归纳。
+      </p>
+
+      <div class="mt-6 grid gap-3 sm:grid-cols-3">
+        <div class="border-line bg-surface-2 rounded-xl border p-4">
+          <p class="font-mono text-xs font-semibold">/llms.txt</p>
+          <p class="text-muted mt-1.5 text-xs leading-relaxed">
+            用自然语言说明本站内容范围、字段含义、推荐引用方式，智能体读完就知道该怎么用。
+          </p>
+        </div>
+        <div class="border-line bg-surface-2 rounded-xl border p-4">
+          <p class="font-mono text-xs font-semibold">/index.json</p>
+          <p class="text-muted mt-1.5 text-xs leading-relaxed">
+            全部文章的标题、日期、标签、一句话摘要和结构化要点，体积小，适合一次性喂给模型。
+          </p>
+        </div>
+        <div class="border-line bg-surface-2 rounded-xl border p-4">
+          <p class="font-mono text-xs font-semibold">/md/&lt;文章id&gt;.md</p>
+          <p class="text-muted mt-1.5 text-xs leading-relaxed">
+            未经渲染的原始 Markdown 源码，保留 frontmatter，适合需要全文精读的场景。
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-surface-2 border-line mt-5 overflow-hidden rounded-xl border">
+        {
+          agentSnippets.map((item) => (
+            <div class="border-line flex items-center gap-3 border-b px-4 py-3 last:border-b-0">
+              <span class="text-muted w-20 shrink-0 text-xs">{item.label}</span>
+              <code class="text-ink-soft overflow-x-auto font-mono text-[0.78rem] whitespace-nowrap">{item.command}</code>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,134 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getPosts, getTags } from '../lib/posts';
+import { SITE, formatDateCN, withBase } from '../lib/site';
+
+const posts = await getPosts();
+const tags = await getTags(posts);
+
+const fields = [
+  { name: 'title / description', desc: '标题与一句话摘要，列表卡片、SEO、RSS 都用它。' },
+  { name: 'tags / category / difficulty', desc: '标签、分类与难度分级，方便聚合与筛选。' },
+  { name: 'summary', desc: '3-5 条结论式要点。智能体做总结时优先读这个字段，不用读全文。' },
+  { name: 'date / updated', desc: '发布和最后更新时间，便于判断内容是否过时。' },
+  { name: 'draft', desc: '草稿开关，草稿只在本地开发时可见，不会进入线上构建。' },
+];
+
+const endpoints = [
+  { path: '/llms.txt', desc: '站点说明书：内容范围、字段含义、推荐引用方式。' },
+  { path: '/index.json', desc: '全部文章的元数据与要点，体积小，适合一次性载入。' },
+  { path: '/search-index.json', desc: '含正文纯文本，适合做全文检索与向量化。' },
+  { path: '/md/<文章id>.md', desc: '单篇文章的原始 Markdown，含 frontmatter。' },
+  { path: '/rss.xml', desc: '订阅最新更新。' },
+  { path: '/sitemap-index.xml', desc: '全站页面清单。' },
+];
+---
+
+<BaseLayout title="关于" description={`关于 ${SITE.title}：写作目的、内容结构，以及如何让 AI 智能体读取这些笔记。`}>
+  <div class="container-page pt-12 pb-8 sm:pt-16">
+    <p class="eyebrow">About</p>
+    <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">关于这个博客</h1>
+    <p class="text-ink-soft mt-5 max-w-3xl text-[1.02rem] leading-relaxed">
+      这里是我存放学习记录的地方。写下来的目的很朴素：把一次性看懂的东西，变成以后还能复用的经验。
+      目前有 {posts.length} 篇文章、{tags.length} 个主题，
+      最近一次更新在 {posts[0] ? formatDateCN(posts[0].data.date) : '—'}。
+    </p>
+  </div>
+
+  <div class="container-page grid gap-10 pb-10 lg:grid-cols-3">
+    <section class="lg:col-span-2">
+      <h2 class="text-xl font-semibold tracking-tight">写什么</h2>
+      <ul class="text-ink-soft mt-4 space-y-2.5 text-sm leading-relaxed">
+        <li class="flex gap-2.5">
+          <span class="bg-accent mt-[0.5rem] h-1.5 w-1.5 shrink-0 rounded-full"></span>
+          <span><strong class="text-ink">学习笔记</strong>：把新学的概念、原理用自己的话重讲一遍，讲不通的地方就是没懂的地方。</span>
+        </li>
+        <li class="flex gap-2.5">
+          <span class="bg-accent mt-[0.5rem] h-1.5 w-1.5 shrink-0 rounded-full"></span>
+          <span><strong class="text-ink">踩坑记录</strong>：报错、误判、返工都记下来，重点写清「为什么当时会那样想」。</span>
+        </li>
+        <li class="flex gap-2.5">
+          <span class="bg-accent mt-[0.5rem] h-1.5 w-1.5 shrink-0 rounded-full"></span>
+          <span><strong class="text-ink">方法论</strong>：复盘整段时间的学习方式，调整流程而不是只调整计划表。</span>
+        </li>
+      </ul>
+
+      <h2 class="mt-12 text-xl font-semibold tracking-tight">为什么每篇都写结构化摘要</h2>
+      <p class="text-ink-soft mt-4 text-sm leading-relaxed">
+        除了给自己看，我希望这些笔记也能被 AI 智能体高效使用：帮我归纳主题、生成复习清单、找出前后矛盾的理解。
+        为此每篇文章的 frontmatter 都是固定结构的，而不是随手写几句。
+      </p>
+
+      <div class="border-line mt-5 overflow-hidden rounded-xl border">
+        <table class="w-full text-sm">
+          <thead class="bg-surface-2">
+            <tr>
+              <th class="border-line border-b px-4 py-2.5 text-left font-medium">字段</th>
+              <th class="border-line border-b px-4 py-2.5 text-left font-medium">作用</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              fields.map((field) => (
+                <tr class="border-line border-b last:border-b-0">
+                  <td class="px-4 py-3 align-top font-mono text-xs whitespace-nowrap">{field.name}</td>
+                  <td class="text-ink-soft px-4 py-3 align-top leading-relaxed">{field.desc}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="mt-12 text-xl font-semibold tracking-tight">如何让 AI 读整站</h2>
+      <p class="text-ink-soft mt-4 text-sm leading-relaxed">
+        下面这些地址都由构建过程自动生成，不需要手动维护。把它们中的任意一个交给智能体即可。
+      </p>
+      <ul class="mt-5 space-y-3">
+        {
+          endpoints.map((item) => (
+            <li class="border-line bg-surface-2 flex flex-col gap-1 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+              <a class="text-accent font-mono text-xs whitespace-nowrap" href={withBase(item.path.replace('<文章id>', 'my-learning-system'))}>
+                {item.path}
+              </a>
+              <span class="text-muted text-xs leading-relaxed">{item.desc}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <h2 class="mt-12 text-xl font-semibold tracking-tight">技术实现</h2>
+      <p class="text-ink-soft mt-4 text-sm leading-relaxed">
+        站点用 Astro 构建、Tailwind CSS 4 设计样式，纯静态输出并托管在 GitHub Pages 上，
+        没有服务端、没有数据库、没有追踪脚本。外观支持亮色 / 暗色 / 跟随系统三种模式与四种强调色，
+        选择会保存在浏览器本地。
+      </p>
+    </section>
+
+    <aside class="space-y-5">
+      <div class="card p-5">
+        <p class="eyebrow">订阅</p>
+        <div class="mt-3 space-y-2 text-sm">
+          <a class="text-accent block" href={withBase('/rss.xml')}>RSS 订阅</a>
+          <a class="text-accent block" href={withBase('/blog/')}>全部文章</a>
+          <a class="text-accent block" href={withBase('/tags/')}>标签索引</a>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <p class="eyebrow">联系方式</p>
+        <p class="text-ink-soft mt-3 text-sm leading-relaxed">
+          想交流或指出错误，欢迎在 <a class="text-accent" href={SITE.social[0]?.href ?? '#'}>GitHub</a> 上找我，
+          或者提交一个 Issue。
+        </p>
+      </div>
+
+      <div class="card p-5">
+        <p class="eyebrow">许可</p>
+        <p class="text-ink-soft mt-3 text-sm leading-relaxed">
+          本站内容可用于个人学习与总结，引用请注明出处并附上原文链接。
+        </p>
+      </div>
+    </aside>
+  </div>
+</BaseLayout>

@@ -1,0 +1,72 @@
+---
+import type { Post } from '../lib/posts';
+import { postPath, postReadingTime } from '../lib/posts';
+import { formatDateCN, toISODate, withBase } from '../lib/site';
+
+interface Props {
+  post: Post;
+  /** 首页头图卡片：更大、更醒目 */
+  featured?: boolean;
+}
+
+const { post, featured = false } = Astro.props;
+const { title, description, date, tags, category, difficulty, summary, cover } = post.data;
+const minutes = postReadingTime(post);
+const href = withBase(postPath(post));
+
+const difficultyTone: Record<string, string> = {
+  入门: 'text-emerald-600 dark:text-emerald-400',
+  进阶: 'text-amber-600 dark:text-amber-400',
+  深入: 'text-rose-600 dark:text-rose-400',
+};
+---
+
+<article class:list={['card group flex flex-col', featured ? 'p-6 sm:p-8' : 'p-5 sm:p-6']}>
+  {
+    cover && (
+      <img
+        src={withBase(cover)}
+        alt=""
+        loading="lazy"
+        class="border-line mb-5 h-40 w-full rounded-xl border object-cover"
+      />
+    )
+  }
+
+  <div class="text-muted flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+    <span class="text-accent font-medium">{category}</span>
+    <span class="bg-line h-3 w-px" aria-hidden="true" />
+    <span class={difficultyTone[difficulty] ?? ''}>{difficulty}</span>
+    <span class="bg-line h-3 w-px" aria-hidden="true" />
+    <time datetime={toISODate(date)}>{formatDateCN(date)}</time>
+    <span class="bg-line h-3 w-px" aria-hidden="true" />
+    <span>{minutes} 分钟</span>
+  </div>
+
+  <h3 class:list={['mt-3 font-semibold tracking-tight', featured ? 'text-xl sm:text-2xl' : 'text-lg']}>
+    <a href={href} class="group-hover:text-accent transition-colors before:absolute before:inset-0 before:content-['']">
+      {title}
+    </a>
+  </h3>
+
+  <p class:list={['text-ink-soft mt-2.5 leading-relaxed', featured ? 'text-[0.98rem]' : 'text-sm']}>
+    {description}
+  </p>
+
+  {
+    featured && summary.length > 0 && (
+      <ul class="text-ink-soft mt-4 space-y-1.5 text-sm">
+        {summary.slice(0, 3).map((item) => (
+          <li class="flex gap-2">
+            <span class="text-accent mt-[0.35rem] h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  <div class="mt-5 flex flex-wrap items-center gap-1.5">
+    {tags.map((tag) => <span class="pill">{tag}</span>)}
+  </div>
+</article>

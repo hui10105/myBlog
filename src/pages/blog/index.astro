@@ -1,0 +1,93 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPosts, getCategories, groupByYear } from '../../lib/posts';
+import { formatDateCN, toISODate, withBase } from '../../lib/site';
+
+const posts = await getPosts();
+const years = groupByYear(posts);
+const categories = await getCategories(posts);
+
+const difficultyTone: Record<string, string> = {
+  入门: 'text-emerald-600 dark:text-emerald-400',
+  进阶: 'text-amber-600 dark:text-amber-400',
+  深入: 'text-rose-600 dark:text-rose-400',
+};
+---
+
+<BaseLayout
+  title="全部文章"
+  description={`按时间整理的全部学习笔记，共 ${posts.length} 篇，涵盖 ${categories.map((item) => item.tag).join('、')}。`}
+>
+  <div class="container-page pt-12 pb-6 sm:pt-16">
+    <p class="eyebrow">Archive</p>
+    <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">全部文章</h1>
+    <p class="text-ink-soft mt-4 max-w-2xl text-sm leading-relaxed">
+      共 {posts.length} 篇，按时间倒序排列。点标题进入全文，全文底部可以跳到原始 Markdown 或复制引用链接。
+    </p>
+
+    <div class="mt-6 flex flex-wrap items-center gap-2">
+      <span class="text-muted text-xs">分类：</span>
+      {
+        categories.map((item) => (
+          <span class="pill">
+            {item.tag}
+            <span class="text-muted font-mono text-[0.7rem]">{item.count}</span>
+          </span>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="container-page pb-8">
+    {
+      years.map((group) => (
+        <section class="mt-10 first:mt-4">
+          <div class="border-line flex items-baseline gap-3 border-b pb-2">
+            <h2 class="text-ink font-mono text-lg font-semibold">{group.year}</h2>
+            <span class="text-muted text-xs">{group.posts.length} 篇</span>
+          </div>
+
+          <ul class="divide-line divide-y">
+            {group.posts.map((post) => (
+              <li>
+                <a
+                  href={withBase(`/blog/${post.id}/`)}
+                  class="group hover:bg-surface-2 -mx-3 flex flex-col gap-2 rounded-xl px-3 py-4 transition-colors sm:flex-row sm:items-baseline sm:gap-5"
+                >
+                  <span class="text-muted flex shrink-0 items-center gap-2 font-mono text-xs">
+                    <time datetime={toISODate(post.data.date)}>{toISODate(post.data.date).slice(5)}</time>
+                    <span class={difficultyTone[post.data.difficulty]}>{post.data.difficulty}</span>
+                  </span>
+
+                  <span class="min-w-0 flex-1">
+                    <span class="text-ink group-hover:text-accent block font-medium transition-colors">
+                      {post.data.title}
+                    </span>
+                    <span class="text-muted mt-1 line-clamp-2 block text-xs leading-relaxed">
+                      {post.data.description}
+                    </span>
+                    <span class="mt-2 flex flex-wrap gap-1.5">
+                      {post.data.tags.map((tag) => (
+                        <span class="pill !py-0 text-[0.7rem]">{tag}</span>
+                      ))}
+                    </span>
+                  </span>
+
+                  <span class="text-muted hidden shrink-0 text-xs sm:block">{formatDateCN(post.data.date)}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+
+    {
+      posts.length === 0 && (
+        <p class="text-muted py-16 text-center text-sm">
+          还没有文章。在 <code class="font-mono">src/content/blog/</code> 里新建 .md 文件开始记录吧。
+        </p>
+      )
+    }
+  </div>
+</BaseLayout>

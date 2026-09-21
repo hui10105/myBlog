@@ -1,0 +1,201 @@
+---
+/**
+ * 主题设置面板：外观模式（跟随系统 / 亮色 / 暗色）+ 强调色。
+ * 初始状态由 BaseLayout 中的内联脚本写好，这里只处理交互与持久化。
+ */
+import { SITE } from '../lib/site';
+
+const modes = [
+  { value: 'auto', label: '跟随系统' },
+  { value: 'light', label: '亮色' },
+  { value: 'dark', label: '暗色' },
+] as const;
+
+const accents = [
+  { value: 'indigo', label: '靛蓝' },
+  { value: 'emerald', label: '青绿' },
+  { value: 'amber', label: '琥珀' },
+  { value: 'rose', label: '绯红' },
+] as const;
+---
+
+<div class="relative" data-theme-toggle data-default-mode={SITE.defaultMode} data-default-accent={SITE.defaultAccent}>
+  <button
+    type="button"
+    class="btn h-9 w-9 !px-0"
+    data-theme-trigger
+    aria-haspopup="true"
+    aria-expanded="false"
+    title="切换主题"
+  >
+    <span class="sr-only">切换主题与配色</span>
+    <!-- 跟随系统 -->
+    <svg data-icon="auto" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2.5" y="4" width="19" height="13" rx="2"></rect>
+      <path d="M8 20.5h8M12 17v3.5"></path>
+    </svg>
+    <!-- 亮色 -->
+    <svg data-icon="light" class="hidden h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"></circle>
+      <path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"></path>
+    </svg>
+    <!-- 暗色 -->
+    <svg data-icon="dark" class="hidden h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20 13.4A8.4 8.4 0 1 1 10.6 4a6.8 6.8 0 0 0 9.4 9.4Z"></path>
+    </svg>
+  </button>
+
+  <div
+    class="border-line bg-surface animate-fade-in absolute right-0 z-50 mt-2 hidden w-56 rounded-xl border p-3 shadow-xl"
+    data-theme-panel
+    role="dialog"
+    aria-label="主题设置"
+  >
+    <p class="eyebrow mb-2">外观</p>
+    <div class="grid gap-1">
+      {
+        modes.map((mode) => (
+          <button
+            type="button"
+            class="hover:bg-surface-2 flex items-center justify-between rounded-lg px-2.5 py-1.5 text-sm transition-colors"
+            data-mode-option={mode.value}
+          >
+            <span>{mode.label}</span>
+            <span class="text-accent hidden text-xs" data-mode-check>✓</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <p class="eyebrow mt-4 mb-2">强调色</p>
+    <div class="flex items-center gap-2 px-1">
+      {
+        accents.map((accent) => (
+          <button
+            type="button"
+            class="ring-line hover:scale-110 h-6 w-6 rounded-full ring-2 transition-transform"
+            style={`background-color: var(--swatch-${accent.value})`}
+            data-accent-option={accent.value}
+            title={accent.label}
+          >
+            <span class="sr-only">{accent.label}</span>
+          </button>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+  /* 色板按钮的固定颜色，不随当前主题变化，方便预览 */
+  [data-accent-option='indigo'] {
+    --swatch-indigo: oklch(54% 0.2 275);
+    background-color: oklch(54% 0.2 275);
+  }
+  [data-accent-option='emerald'] {
+    --swatch-emerald: oklch(60% 0.13 168);
+    background-color: oklch(60% 0.13 168);
+  }
+  [data-accent-option='amber'] {
+    --swatch-amber: oklch(70% 0.15 70);
+    background-color: oklch(70% 0.15 70);
+  }
+  [data-accent-option='rose'] {
+    --swatch-rose: oklch(62% 0.19 12);
+    background-color: oklch(62% 0.19 12);
+  }
+  [data-accent-option][data-selected='true'] {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.documentElement;
+    var box = document.querySelector('[data-theme-toggle]');
+    if (!box) return;
+
+    var trigger = box.querySelector('[data-theme-trigger]');
+    var panel = box.querySelector('[data-theme-panel]');
+    var icons = box.querySelectorAll('[data-icon]');
+    var modeButtons = box.querySelectorAll('[data-mode-option]');
+    var accentButtons = box.querySelectorAll('[data-accent-option]');
+
+    function readMode() {
+      return root.getAttribute('data-mode') || box.dataset.defaultMode || 'auto';
+    }
+    function readAccent() {
+      return root.getAttribute('data-accent') || box.dataset.defaultAccent || 'indigo';
+    }
+
+    /** 应用主题：写 class/属性 + 持久化 + 同步 UI 状态 */
+    function apply(mode, accent) {
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var isDark = mode === 'dark' || (mode === 'auto' && prefersDark);
+      root.classList.toggle('dark', isDark);
+      root.setAttribute('data-accent', accent);
+      root.setAttribute('data-mode', mode);
+      try {
+        localStorage.setItem('theme-mode', mode);
+        localStorage.setItem('theme-accent', accent);
+      } catch (e) {}
+      sync();
+    }
+
+    /** 把当前状态同步到按钮：图标、选中标记、无障碍属性 */
+    function sync() {
+      var mode = readMode();
+      var accent = readAccent();
+      icons.forEach(function (icon) {
+        icon.classList.toggle('hidden', icon.getAttribute('data-icon') !== mode);
+      });
+      modeButtons.forEach(function (button) {
+        var active = button.getAttribute('data-mode-option') === mode;
+        button.setAttribute('aria-current', active ? 'true' : 'false');
+        button.classList.toggle('text-accent', active);
+        var check = button.querySelector('[data-mode-check]');
+        if (check) check.classList.toggle('hidden', !active);
+      });
+      accentButtons.forEach(function (button) {
+        button.setAttribute('data-selected', button.getAttribute('data-accent-option') === accent ? 'true' : 'false');
+      });
+    }
+
+    function openPanel(open) {
+      panel.classList.toggle('hidden', !open);
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    trigger.addEventListener('click', function (event) {
+      event.stopPropagation();
+      openPanel(panel.classList.contains('hidden'));
+    });
+
+    modeButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        apply(button.getAttribute('data-mode-option'), readAccent());
+      });
+    });
+
+    accentButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        apply(readMode(), button.getAttribute('data-accent-option'));
+      });
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!box.contains(event.target)) openPanel(false);
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') openPanel(false);
+    });
+
+    // 跟随系统时，用户改系统外观要实时响应
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+      if (readMode() === 'auto') apply('auto', readAccent());
+    });
+
+    sync();
+  })();
+</script>

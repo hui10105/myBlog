@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getPosts, getTags } from '../../lib/posts';
+import { withBase } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const tags = await getTags(posts);
+  return tags.map((item) => ({
+    params: { tag: item.tag },
+    props: { tag: item.tag, posts: item.posts, allTags: tags },
+  }));
+}
+
+const { tag, posts, allTags } = Astro.props;
+---
+
+<BaseLayout
+  title={`标签：${tag}`}
+  description={`标签「${tag}」下的全部 ${posts.length} 篇学习笔记。`}
+>
+  <div class="container-page pt-12 pb-8 sm:pt-16">
+    <p class="eyebrow">Topic</p>
+    <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+      <span class="text-muted">#</span>{tag}
+    </h1>
+    <p class="text-ink-soft mt-4 text-sm">
+      该标签下有 {posts.length} 篇文章 · <a class="text-accent" href={withBase('/tags/')}>查看全部标签</a>
+    </p>
+  </div>
+
+  <div class="container-page pb-6">
+    <div class="grid gap-5 md:grid-cols-2">
+      {posts.map((post) => <PostCard post={post} />)}
+    </div>
+  </div>
+
+  <div class="container-page mt-6 pb-16">
+    <p class="eyebrow mb-3">其他标签</p>
+    <div class="flex flex-wrap gap-2">
+      {
+        allTags
+          .filter((item) => item.tag !== tag)
+          .map((item) => (
+            <a class="pill" href={withBase(`/tags/${encodeURIComponent(item.tag)}/`)}>
+              {item.tag}
+              <span class="text-muted font-mono text-[0.7rem]">{item.count}</span>
+            </a>
+          ))
+      }
+    </div>
+  </div>
+</BaseLayout>
