@@ -10,7 +10,7 @@
 ## 硬性约束
 
 1. **不要改动 `pnpm build` 的静态输出方式**（`output: 'static'`），也不要引入需要 Node 运行时或数据库的功能。
-2. **所有站内链接必须走 `withBase()`**（`src/lib/site.ts`）。GitHub Pages 项目站点部署在 `/myBolg` 子路径下，写死 `/blog/` 这类绝对路径会导致线上 404。
+2. **所有站内链接必须走 `withBase()`**（`src/lib/site.ts`）。GitHub Pages 项目站点部署在 `/myBlog` 子路径下，写死 `/blog/` 这类绝对路径会导致线上 404。
 3. **`site.config.mjs` 里的 `GITHUB_USER` 是部署的唯一开关**，不要把它硬编码到其他文件里。
 4. 新增文章只放在 `src/content/blog/`，不要为了排版方便去改 `content.config.ts` 的字段语义；确需新增字段时同步更新 `README.md` 的字段表、`src/pages/llms.txt.ts` 的字段说明表、以及 `src/pages/index.json.ts` 的 `schema` 段。
 5. 样式改动集中在 `src/styles/global.css`：主题色变量在 `:root` / `.dark`，组件级样式在 `@layer components`，文章排版在文件末尾的 `.article`。**新增颜色不要在组件里写死十六进制值**，用 `var(--accent)`、`var(--surface)`、`var(--line)` 等变量，否则暗色模式和强调色切换会失效。

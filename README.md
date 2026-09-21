@@ -30,21 +30,21 @@ Node 版本要求 18.20+ / 20.3+ / 22 以上，推荐 22。
 
 ```js
 export const GITHUB_USER = 'YOUR_GITHUB_USERNAME'; // ← 改成你的 GitHub 用户名
-export const REPO_NAME = 'myBolg';
+export const REPO_NAME = 'myBlog';
 ```
 
 只改这一处即可。文件名和站点地址会据此自动推导：
 
 | 配置 | 结果 |
 | --- | --- |
-| `GITHUB_USER = 'alice'`、`REPO_NAME = 'myBolg'` | 访问 `https://alice.github.io/myBolg/`，`base = /myBolg` |
+| `GITHUB_USER = 'alice'`、`REPO_NAME = 'myBlog'` | 访问 `https://alice.github.io/myBlog/`，`base = /myBlog` |
 | `GITHUB_USER = 'alice'`、`REPO_NAME = 'alice.github.io'` | 访问 `https://alice.github.io/`，`base = /`（用户站点，根路径） |
 
 > 这一步很关键：GitHub Pages 的项目站点部署在子路径下，`base` 配错会导致线上样式、图片、文章页全部 404。
 
 ## 三、部署到 GitHub Pages
 
-1. 在 GitHub 上新建一个仓库，名字用 `myBolg`（或改成 `你的用户名.github.io` 做用户站点）。
+1. 在 GitHub 上新建一个仓库，名字用 `myBlog`（或改成 `你的用户名.github.io` 做用户站点）。
 2. 关联并推送代码：
 
    ```bash
@@ -52,13 +52,13 @@ export const REPO_NAME = 'myBolg';
    git add .
    git commit -m "chore: 初始化博客"
    git branch -M main
-   git remote add origin git@github.com:<你的用户名>/myBolg.git
+   git remote add origin git@github.com:<你的用户名>/myBlog.git
    git push -u origin main
    ```
 
 3. 打开仓库 **Settings → Pages**，把 **Source** 选为 **GitHub Actions**（不是 "Deploy from a branch"）。
 4. 推送到 `main` 后，`.github/workflows/deploy.yml` 会自动构建并部署，进度在仓库的 **Actions** 页可以看到。
-5. 部署完成后访问 `https://<你的用户名>.github.io/myBolg/`。
+5. 部署完成后访问 `https://<你的用户名>.github.io/myBlog/`。
 
 之后每次 `git push` 都会自动重新发布，不需要手动构建。
 
@@ -120,7 +120,7 @@ summary:
 
 ### 图片
 
-放在 `public/` 下，正文里用 `![说明](/myBolg/images/foo.png)` 引用（注意带上 `base` 前缀），
+放在 `public/` 下，正文里用 `![说明](/myBlog/images/foo.png)` 引用（注意带上 `base` 前缀），
 或者直接放进 `src/assets/` 用相对路径引用，交给 Astro 处理。
 
 ---
@@ -139,15 +139,15 @@ summary:
 用法示例（把地址换成你自己的站点）：
 
 ```text
-请读取 https://<用户名>.github.io/myBolg/llms.txt，
+请读取 https://<用户名>.github.io/myBlog/llms.txt，
 然后总结这个博客目前主要在研究哪些主题，指出我重复踩过的坑，
 最后给出一份按优先级排序的复习清单。
 ```
 
 ```bash
 # 用于脚本或 agent 工具链
-curl -sL https://<用户名>.github.io/myBolg/index.json | jq '.posts[] | {title, tags, summary}'
-curl -sL https://<用户名>.github.io/myBolg/md/my-learning-system.md
+curl -sL https://<用户名>.github.io/myBlog/index.json | jq '.posts[] | {title, tags, summary}'
+curl -sL https://<用户名>.github.io/myBlog/md/my-learning-system.md
 ```
 
 仓库根目录还有一份 `AGENTS.md`，里面写清了内容约定与整理流程，

@@ -11,7 +11,7 @@ export { SITE };
  * 否则样式、图片、文章页在线上都会 404。
  */
 export function withBase(path = '/'): string {
-  const base = import.meta.env.BASE_URL.replace(/\/$/, ''); // '' 或 '/myBolg'
+  const base = import.meta.env.BASE_URL.replace(/\/$/, ''); // '' 或 '/myBlog'
   if (!path || path === '/') return `${base}/` || '/';
   if (/^(https?:)?\/\/|^mailto:|^#/.test(path)) return path;
   return `${base}${path.startsWith('/') ? path : `/${path}`}`;
@@ -24,7 +24,7 @@ export function withBase(path = '/'): string {
 export function absoluteUrl(pathname = '/', origin?: string): string {
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   const host = origin ?? 'https://example.com';
-  // 目录型路径统一补上结尾斜杠（首页为 /myBolg/ 而不是 /myBolg），
+  // 目录型路径统一补上结尾斜杠（首页为 /myBlog/ 而不是 /myBlog），
   // 带扩展名的文件路径（如 /llms.txt）保持原样
   const normalized =
     !/\.[a-z0-9]+$/i.test(pathname) && !pathname.endsWith('/') ? `${pathname}/` : pathname;

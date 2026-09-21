@@ -2,14 +2,14 @@
  * 站点全局配置 —— 部署到 GitHub Pages 时只需要改这里。
  *
  * 用法（项目站点）：把 GITHUB_USER 改成你的 GitHub 用户名，
- * 站点将发布到 https://<GITHUB_USER>.github.io/myBolg/
+ * 站点将发布到 https://<GITHUB_USER>.github.io/myBlog/
  *
  * 如果以后想换成用户站点（仓库名改成 <用户名>.github.io，站点在根路径），
  * 把 REPO_NAME 改成 `${GITHUB_USER}.github.io` 即可，其余不用动。
  */
 
 export const GITHUB_USER = 'hui10105';
-export const REPO_NAME = 'myBolg';
+export const REPO_NAME = 'myBlog';
 
 /** 是否为「用户/组织站点」：仓库名为 <用户名>.github.io 时站点位于根路径 */
 const isUserSite = REPO_NAME.toLowerCase() === `${GITHUB_USER.toLowerCase()}.github.io`;
@@ -17,10 +17,10 @@ const isUserSite = REPO_NAME.toLowerCase() === `${GITHUB_USER.toLowerCase()}.git
 /** 站点根地址，例如 https://yourname.github.io */
 export const SITE_ORIGIN = `https://${GITHUB_USER}.github.io`;
 
-/** 部署后的实际访问地址，例如 https://yourname.github.io/myBolg */
+/** 部署后的实际访问地址，例如 https://yourname.github.io/myBlog */
 export const SITE_URL = isUserSite ? SITE_ORIGIN : `${SITE_ORIGIN}/${REPO_NAME}`;
 
-/** URL 前缀，用户站点为 '/'，项目站点为 '/myBolg' */
+/** URL 前缀，用户站点为 '/'，项目站点为 '/myBlog' */
 export const BASE_PATH = isUserSite ? '/' : `/${REPO_NAME}`;
 
 export const SITE = {
