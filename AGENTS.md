@@ -41,6 +41,8 @@
 ## 常见任务
 
 - **新增文章**：`pnpm new "标题" --slug=english-slug --tags=A,B`，然后补全 `summary` 并把 `draft` 改为 `false`。
+- **修改文章**：直接编辑 `src/content/blog/<id>.md`；有实质更新时补上 `updated` 字段，不要改文件名（文件名即 URL，改了就 404）。
+- **删除文章**：`git rm src/content/blog/<id>.md` 即可，索引、标签、分类、相关推荐都由构建推导，无需改代码；顺手检查其他文章正文里有没有指向它的手写链接。
 - **新增分类**：只改 `src/lib/categories.ts` 的 `CATEGORIES` 加一项（名称 + 说明），schema 与分类页都会自动跟上；现有三个分类是学习笔记 / 专题总结 / 游戏开发。
 - **改站点信息**：只改 `site.config.mjs`。
 - **改主题/配色**：改 `src/styles/global.css` 的 CSS 变量；强调色还需要在 `ThemeToggle.astro` 增加色板按钮。
