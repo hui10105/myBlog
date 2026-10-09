@@ -125,6 +125,49 @@ summary:
 
 ---
 
+### 修改已有文章
+
+直接编辑 `src/content/blog/<文件名>.md` 就行。有实质更新时把 frontmatter 的 `updated` 补上日期，文章页会显示「最后更新于」。改完本地看一眼再推送：
+
+```bash
+pnpm dev          # http://localhost:4321/myBlog/
+git add -A
+git commit -m "docs: 修订 xxx"
+git push          # 推送后 Actions 约一分钟自动重新发布
+```
+
+> **改文件名等于改 URL。** 文章地址由文件名决定（`foo.md` → `/blog/foo/`），站点没有配置重定向，所以重命名文件会让旧链接 404。建议一开始就把 slug 取好，发布后尽量别再改。
+
+### 删除文章
+
+删除文件本身就够了：
+
+```bash
+git rm src/content/blog/<文件名>.md
+git commit -m "chore: 移除 xxx"
+git push
+```
+
+首页统计、分类计数、标签页、`/index.json`、`/llms.txt`、搜索索引、相关文章推荐**全部由构建过程推导**，删完会自动更新，不需要改任何代码。唯一要自己检查的是：有没有别的文章正文里手写了指向这篇的链接，以及它用了 `cover` 的话 `public/` 下的图片要不要一起删。
+
+### 草稿与发布
+
+`draft: true` 的文章只在本地 `pnpm dev` 可见（页面会标「草稿」并加了 noindex），线上构建完全跳过它。写完了把 `draft` 改成 `false` 再推送即可。
+
+### 写错了会怎样
+
+frontmatter 有 schema 校验，字段类型或取值不合法会让构建失败，并指出具体文件与字段。三条最容易踩的约束：
+
+- `category` 只能填 `学习笔记` / `专题总结` / `游戏开发`（清单在 `src/lib/categories.ts`）
+- `difficulty` 只能填 `入门` / `进阶` / `深入`
+- `date` 要写成 `2026-09-21` 这种能被解析的日期
+
+推到 GitHub 后如果 Actions 失败，**线上仍保持上一版可访问**，不会挂掉，改完再推一次就行。
+
+### 新增分类
+
+改 `src/lib/categories.ts` 的 `CATEGORIES` 加一项（名称 + 说明文案），schema 校验和分类页会自动跟上。注意这个文件必须留在 `src/` 里，Astro 的内容配置加载器解析不了 `src/` 之外的导入。
+
 ## 五、让 AI 智能体总结这个博客
 
 站点构建时会自动生成三个出口，不需要手工维护：
