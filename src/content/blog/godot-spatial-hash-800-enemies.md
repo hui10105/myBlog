@@ -4,7 +4,7 @@ description: "类幸存者的性能特征是「同屏几百个会动的东西」
 date: 2026-10-09
 tags: ["AI生成博客", "Godot", "性能优化", "GDScript"]
 category: "游戏开发"
-difficulty: "进阶"
+difficulty: "深入"
 draft: false
 summary:
   - "敌人完全不用物理引擎、只用裸 Node2D，是因为几百个物理体的开销不可接受；玩家是唯一保留物理体的角色，因为只有一个、成本为零"
